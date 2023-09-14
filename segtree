@@ -1,0 +1,123 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+/************************************/
+
+#define ll long long
+#define pll pair<ll, ll>
+#define pii pair<int, int>
+#define ff first
+#define ss second
+#define MAXN ((ll) 1e5)
+#define INF 1e18
+#define MOD 998244353
+using mint = Fp<MOD>;
+
+/************************************/
+
+struct sgt
+{
+    ll n;
+    ll cnt = 0;
+    ll rt = 0;
+    ll sgl, sgr;
+    vector<mint> v, lzt;
+    vector<ll> ls, rs;
+    sgt(int _n) : n(_n), v(n << 2), lzt(n << 2), ls(n << 2), rs(n << 2)
+    {
+        sgl = 0, sgr = n - 1;
+    }
+
+    void init(ll p) { v[p] = 0, lzt[p] = 1, ls[p] = 0, rs[p] = 0; }
+    
+    void pushDown(ll p)
+    {
+        if (!ls[p]) ls[p] = ++cnt, init(cnt);
+        if (!rs[p]) rs[p] = ++cnt, init(cnt);
+
+        if (lzt[p] != 1)
+        {
+            v[ls[p]] *= lzt[p]; lzt[ls[p]] = lzt[p];
+            v[rs[p]] *= lzt[p]; lzt[rs[p]] = lzt[p];
+            lzt[p] = 1;
+        }
+    }
+
+    void pullUp(ll p)
+    {
+        v[p] = v[ls[p]] + v[rs[p]];
+    }
+
+    mint query(ll p, ll ql, ll qr, ll cl, ll cr)
+    {
+        pushDown(p);
+
+        if (ql <= cl && cr <= qr)
+            return v[p];
+        if (cl > qr || cr < ql)
+            return 0;
+
+        ll mid = (cl + cr) >> 1;
+        return query(ls[p], ql, qr, cl, mid) + query(rs[p], ql, qr, mid + 1, cr);
+
+        pullUp(p);
+    }
+    mint query(ll ql, ll qr) { return query(rt, ql, qr, sgl, sgr); }
+
+    void update(ll p, ll ql, ll qr, ll cl, ll cr, mint value)
+    {
+        pushDown(p);
+
+        if (ql <= cl && cr <= qr)
+        {
+            v[p] = value;
+            return;
+        }
+        if (cl > qr || cr < ql)
+            return;
+
+        ll mid = (cl + cr) >> 1;
+        update(ls[p], ql, qr, cl, mid, value);
+        update(rs[p], ql, qr, mid + 1, cr, value);
+
+        pullUp(p);
+    }
+    void update(ll ql, ll qr, mint value) { update(rt, ql, qr, sgl, sgr, value); }
+
+    void multi(ll p, ll ql, ll qr, ll cl, ll cr, mint value)
+    {
+        pushDown(p);
+
+        if (ql <= cl && cr <= qr)
+        {
+            lzt[p] *= value;
+            v[p] *= value;
+            return;
+        }
+        if (cl > qr || cr < ql)
+            return;
+
+        ll mid = (cl + cr) >> 1;
+        multi(ls[p], ql, qr, cl, mid, value);
+        multi(rs[p], ql, qr, mid + 1, cr, value);
+
+        pullUp(p);
+    }
+    void multi(ll ql, ll qr, mint value) { multi(rt, ql, qr, sgl, sgr, value); }
+};
+
+int main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout.tie(nullptr);
+
+    sgt x(11);
+    x.update(0, 0, 10);
+    x.update(1, 1, 2);
+    cout << x.query(0, 1) << endl;
+    x.multi(0, 1, 2);
+    cout << x.query(0, 1) << endl;
+
+    return 0;
+}
